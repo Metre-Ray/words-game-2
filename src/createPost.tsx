@@ -22,7 +22,6 @@ Devvit.addMenuItem({
         </vstack>
       ),
     });
-    ui.showToast({ text: 'Created post!' });
     ui.navigateTo(post);
   },
 });

@@ -1,17 +1,20 @@
 class App {
   constructor() {
-    const output = document.querySelector('#messageOutput');
-    const increaseButton = document.querySelector('#btn-increase');
-    const decreaseButton = document.querySelector('#btn-decrease');
-    const usernameLabel = document.querySelector('#username');
-    const counterLabel = document.querySelector('#counter');
-    
     const wordInput = document.getElementById('wordInput');
     const submitButton = document.getElementById('submitWord');
     const statusDiv = document.getElementById('status');
-    var counter = 0;
+    const timerDisplay = document.getElementById('timerDisplay');
+    const startOverButton = document.getElementById('startOver');
     let timeLimit = 60;
     let startWord = 'start';
+    let playerNumber = 2;
+
+    startOverButton.addEventListener('click', () => {
+      window.parent?.postMessage(
+        { type: 'gameOver', data: {} },
+        '*'
+      );
+    });
 
     // When the Devvit app sends a message with `context.ui.webView.postMessage`, this will be triggered
     window.addEventListener('message', (ev) => {
@@ -24,44 +27,14 @@ class App {
         // Always output full message
         // output.replaceChildren(JSON.stringify(message, undefined, 2));
 
-        // Load initial data
         if (message.type === 'initialData') {
-          // const { username, currentCounter } = message.data;
           timeLimit = message.data.timeLimit;
           startWord = message.data.startWord;
+          playerNumber = message.data.playerNumber;
           startGame(startWord, timeLimit);
-          // usernameLabel.innerText = username;
-          // counterLabel.innerText = counter = currentCounter;
         }
-
-        // Update counter
-        // if (message.type === 'updateCounter') {
-        //   const { currentCounter } = message.data;
-        //   counterLabel.innerText = counter = currentCounter;
-        // }
       }
     });
-
-    // increaseButton.addEventListener('click', () => {
-    //   // Sends a message to the Devvit app
-    //   window.parent?.postMessage(
-    //     { type: 'setCounter', data: { newCounter: Number(counter + 1) } },
-    //     '*'
-    //   );
-    // });
-
-    // decreaseButton.addEventListener('click', () => {
-    //   // Sends a message to the Devvit app
-    //   window.parent?.postMessage(
-    //     { type: 'setCounter', data: { newCounter: Number(counter - 1) } },
-    //     '*'
-    //   );
-    // });
-
-
-
-
-
 
 
     function startGame(startWord, timeLimit) {
@@ -72,6 +45,7 @@ class App {
       wordInput.value = startWord;
   
       let timeout;
+      let countdownInterval;
       submitButton.addEventListener('click', () => {
           const word = wordInput.value.trim().toLowerCase();
   
@@ -92,24 +66,42 @@ class App {
   
           usedWords.add(word);
           clearTimeout(timeout);
+          clearInterval(countdownInterval);
           lastLetter = word[word.length - 1];
           updateStatus(`Valid word! Player ${currentPlayer} played: "${word}". Next word must start with '${lastLetter}'.`, 'success');
           
-          // Switch player
-          currentPlayer = currentPlayer === 1 ? 2 : 1;
+          currentPlayer = currentPlayer === playerNumber ? 1 : currentPlayer + 1;
   
-          // Clear the input field
           wordInput.value = '';
+
+          let timeRemaining = timeLimit;
+          updateDisplay(timeRemaining);
+
+          countdownInterval = setInterval(() => {
+            timeRemaining--;
+            if (timeRemaining <= 0) {
+              clearInterval(countdownInterval);
+              updateDisplay(0);
+            } else {
+              updateDisplay(timeRemaining);
+            }
+          }, 1000);
   
           timeout = setTimeout(() => {
-            endGame(usedWords, currentPlayer);
-          }, timeLimit * 1000)
+            endGame(usedWords, currentPlayer, playerNumber);
+          }, timeLimit * 1000);
       });
     }
 
-    function endGame(usedWords, currentPlayer) {
+    function endGame(usedWords, currentPlayer, playerNumber) {
       wordInput.disabled = true;
-      updateStatus(`Time is over! Game over. Winner: Player ${currentPlayer}. Total word length: ${usedWords.size}`, 'error');
+      const playerWinner = [];
+      for (let i = 1; i < playerNumber + 1; i++) {
+        if (i !== currentPlayer) {
+          playerWinner.push(i);
+        }
+      }
+      updateStatus(`Time is over! Game over. Winner: Player ${playerWinner.join(', ')}. Total word length: ${usedWords.size}`, 'error');
     }
 
     function updateStatus(message, statusType) {
@@ -117,10 +109,11 @@ class App {
       statusDiv.className = `status ${statusType}`;
     }
 
-    // document.getElementById('gameForm').addEventListener('submit', () => {
-    //   document.querySelector('.game-container').style.display = 'block';
-    //   document.getElementById('gameForm').classList.add('hidden');
-    // });
+    function updateDisplay(seconds) {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      timerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+    }
   }
 
 
