@@ -99,7 +99,6 @@ Devvit.addCustomPostType({
       });
     };
 
-    // Render the custom post type
     return (
       <vstack grow padding="small">
         <vstack
@@ -109,6 +108,9 @@ Devvit.addCustomPostType({
         >
           <text size="xlarge" weight="bold">
             Words Game
+          </text>
+          <text size="medium" weight="bold">
+            Players play from the same computer.
           </text>
           <text size="medium" weight="bold">
             Players take turns entering words.
