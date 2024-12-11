@@ -18,20 +18,18 @@ Devvit.addCustomPostType({
           {
             type: 'number',
             name: 'playerNumber',
-            label: 'Number of players',
+            label: 'Number of players (2-200)',
             required: true,
             defaultValue: 2,
-            min: 2,
-            max: 20,
+            helpText: 'Minimum is 2, maximum is 200',
           },
           {
             type: 'number',
             name: 'timeLimit',
-            label: 'Time limit for answer (in seconds)',
+            label: 'Time limit for answer (in seconds, 1-1000)',
             required: true,
             defaultValue: 60,
-            min: 0.5,
-            max: 1000,
+            helpText: 'Minimum is 1, maximum is 1000',
           },
           {
             type: 'string',
@@ -42,6 +40,12 @@ Devvit.addCustomPostType({
         ],
       },
       (values) => {
+        if (values.playerNumber < 2 || values.playerNumber > 200) {
+          throw new Error('Players limit is 2-200')
+        }
+        if (values.timeLimit < 0.5 || values.timeLimit > 1000) {
+          throw new Error('Time limit is 0.5-1000')
+        }
         onShowWebviewClick(values.timeLimit, values.startWord, values.playerNumber);
       }
     );
